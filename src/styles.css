@@ -19,6 +19,11 @@
  */
 
 @theme inline {
+  --font-sans: var(--font-sans);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-navy-muted: var(--navy-muted);
+  --color-success: var(--success);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -62,26 +67,34 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.75rem;
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --background: oklch(0.984 0.003 247.858);
+  --foreground: oklch(0.16 0.04 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.16 0.04 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.16 0.04 260);
+  --primary: oklch(0.52 0.21 259);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.01 250);
+  --secondary-foreground: oklch(0.2 0.05 260);
+  --muted: oklch(0.96 0.01 250);
+  --muted-foreground: oklch(0.55 0.04 257);
+  --accent: oklch(0.76 0.15 225);
+  --accent-foreground: oklch(0.16 0.04 260);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --ring: oklch(0.52 0.21 259);
+  --navy: oklch(0.15 0.04 265);
+  --navy-foreground: oklch(0.97 0.01 250);
+  --navy-muted: oklch(0.7 0.04 255);
+  --success: oklch(0.65 0.15 155);
+  --gradient-brand: linear-gradient(135deg, var(--primary), var(--accent));
+  --gradient-navy: linear-gradient(180deg, oklch(0.2 0.05 260), var(--navy));
+  --shadow-float: 0 12px 40px -12px color-mix(in oklab, var(--navy) 35%, transparent);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -142,3 +155,8 @@
     color: var(--color-foreground);
   }
 }
+
+@utility bg-gradient-brand { background-image: var(--gradient-brand); }
+@utility bg-gradient-navy { background-image: var(--gradient-navy); }
+@utility shadow-float { box-shadow: var(--shadow-float); }
+@layer base { body { font-family: var(--font-sans); } }
