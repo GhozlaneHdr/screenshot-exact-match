@@ -1,54 +1,108 @@
-export const VARIABLES = ["name", "ticket_id", "company", "date", "sender_name"] as const;
+export const VARIABLES = ["name", "company", "date", "week", "region", "sender_name"] as const;
 
 export const SAMPLE_DATA: Record<string, string> = {
-  name: "Amine Benali",
-  ticket_id: "INC-20481",
-  company: "Sinova Technologies",
+  name: "Équipe Commerciale",
+  company: "SAMSUNG SINOVA",
   date: "28 Oct 2026",
-  sender_name: "Sinova IT Support",
+  week: "S44",
+  region: "Alger Centre",
+  sender_name: "Ghozlane Hadri",
 };
 
-export const SENDERS = [
-  { id: "it", name: "Sinova IT Support", title: "IT Service Desk", email: "it-support@sinova.com" },
-  { id: "pm", name: "Product Manager", title: "Product Management Office", email: "product@sinova.com" },
-  { id: "admin", name: "Administration", title: "Corporate Administration", email: "admin@sinova.com" },
+export type Brand = {
+  logoText: string;
+  logoUrl: string;
+  tagline: string;
+  headerBg: string;
+  primary: string;
+  accent: string;
+  textColor: string;
+  headingColor: string;
+  font: string;
+  footerBg: string;
+  footerText: string;
+  footerAddress: string;
+  footerNotice: string;
+  buttonRadius: number;
+};
+
+export const DEFAULT_BRAND: Brand = {
+  logoText: "SAMSUNG SINOVA",
+  logoUrl: "",
+  tagline: "Performance Commerciale",
+  headerBg: "#03071E",
+  primary: "#1428A0",
+  accent: "#00C2FF",
+  textColor: "#334155",
+  headingColor: "#0B192C",
+  font: "Arial, Helvetica, sans-serif",
+  footerBg: "#0B192C",
+  footerText: "#94A3B8",
+  footerAddress: "SAMSUNG SINOVA · Algérie",
+  footerNotice: "CONFIDENTIEL : Ce message et ses pièces jointes sont destinés exclusivement à leurs destinataires.",
+  buttonRadius: 8,
+};
+
+export const FONTS = [
+  { label: "Arial", value: "Arial, Helvetica, sans-serif" },
+  { label: "Segoe UI", value: "'Segoe UI', Tahoma, sans-serif" },
+  { label: "Verdana", value: "Verdana, Geneva, sans-serif" },
+  { label: "Georgia", value: "Georgia, 'Times New Roman', serif" },
+  { label: "Trebuchet", value: "'Trebuchet MS', sans-serif" },
+  { label: "Courier", value: "'Courier New', monospace" },
 ];
 
-const btn = (label: string, href = "#") =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td align="center" bgcolor="#0057D9" style="border-radius:8px;"><a href="${href}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">${label}</a></td></tr></table>`;
+export const DEFAULT_SIGNATURE = `<p style="margin:0;font-size:14px;line-height:1.6;">Cordialement,<br><strong>Ghozlane Hadri</strong><br>Chargée de la performance Commerciale<br>SAMSUNG SINOVA</p>`;
 
-export const BUTTON_SNIPPET = btn("Call to action");
-export const CALLOUT_SNIPPET = `<div style="margin:20px 0;padding:16px 20px;background:#EFF6FF;border-left:4px solid #0057D9;border-radius:6px;color:#0B192C;">Important: add your highlighted note here.</div>`;
-export const TABLE_SNIPPET = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:16px 0;"><tr><th style="text-align:left;padding:10px;border-bottom:2px solid #0057D9;color:#0B192C;">Item</th><th style="text-align:left;padding:10px;border-bottom:2px solid #0057D9;color:#0B192C;">Status</th></tr><tr><td style="padding:10px;border-bottom:1px solid #E2E8F0;">Row 1</td><td style="padding:10px;border-bottom:1px solid #E2E8F0;">Done</td></tr></table>`;
+export const btn = (label: string, href = "#", color = "#1428A0", radius = 8) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td align="center" bgcolor="${color}" style="border-radius:${radius}px;"><a href="${href}" target="_blank" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:${radius}px;">${label}</a></td></tr></table>`;
+
+export const CALLOUT_SNIPPET = `<div style="margin:20px 0;padding:16px 20px;background:#EFF6FF;border-left:4px solid #1428A0;border-radius:6px;color:#0B192C;">Important : ajoutez votre note ici.</div>`;
+
+const kpiTable = (rows: [string, string, string, string][]) =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:16px 0;font-size:14px;"><tr>${["Indicateur", "Objectif", "Réalisé", "Taux"].map((h) => `<th style="text-align:left;padding:10px;border-bottom:2px solid #1428A0;color:#0B192C;">${h}</th>`).join("")}</tr>${rows
+    .map((r) => `<tr>${r.map((c) => `<td style="padding:10px;border-bottom:1px solid #E2E8F0;">${c}</td>`).join("")}</tr>`)
+    .join("")}</table>`;
+
+export const TABLE_SNIPPET = kpiTable([["Indicateur", "100", "90", "90%"]]);
 
 export const TEMPLATES = [
   {
-    id: "escalation",
-    name: "Ticket Escalation",
-    desc: "IT incident escalation notice",
-    subject: "[Escalated] Ticket {{ticket_id}} requires attention",
-    body: `<h1>Ticket escalation notice</h1><p>Hello {{name}},</p><p>Ticket <strong>{{ticket_id}}</strong> has been escalated to Level 2 support due to its business impact on {{company}}.</p>${CALLOUT_SNIPPET.replace("Important: add your highlighted note here.", "Priority: <strong>High</strong> — Target resolution within 4 business hours.")}<p>Our engineers are actively investigating. You will receive updates as progress is made.</p>${btn("View ticket")}`,
+    id: "weekly",
+    name: "Weekly Sales Report",
+    desc: "Rapport hebdomadaire des ventes",
+    subject: "Rapport des ventes — Semaine {{week}}",
+    body: `<h1>Rapport hebdomadaire des ventes</h1><p>Bonjour {{name}},</p><p>Veuillez trouver ci-dessous la synthèse des performances commerciales de la semaine {{week}} pour la région {{region}}.</p>${kpiTable([
+      ["Chiffre d'affaires", "45 M DA", "48,2 M DA", "107%"],
+      ["Unités vendues", "3 200", "3 015", "94%"],
+      ["Sell-out smartphones", "1 800", "1 912", "106%"],
+      ["Points de vente actifs", "120", "114", "95%"],
+    ])}<h2>Points clés</h2><ul><li>Forte progression de la gamme Galaxy S</li><li>Retard sur l'électroménager à rattraper</li><li>Promotion de fin de mois à lancer</li></ul>${btn("Voir le tableau de bord")}`,
   },
   {
-    id: "system",
-    name: "System Update",
-    desc: "Hierarchy correction & changes",
-    subject: "System update & hierarchy correction — {{date}}",
-    body: `<h1>System update</h1><p>Dear {{name}},</p><p>As of {{date}}, the following updates have been applied to the {{company}} directory:</p><ul><li>Reporting lines corrected for the Operations division</li><li>Access roles synchronized with HR records</li><li>Legacy approval groups retired</li></ul>${TABLE_SNIPPET}<p>No action is required unless your details are incorrect.</p>`,
+    id: "kpi",
+    name: "KPI Alert",
+    desc: "Alerte sur un indicateur",
+    subject: "⚠ Alerte KPI — {{region}} sous l'objectif",
+    body: `<h1>Alerte KPI</h1><p>Bonjour {{name}},</p><p>Un indicateur clé est passé sous le seuil d'alerte au {{date}}.</p><div style="margin:20px 0;padding:16px 20px;background:#FEF2F2;border-left:4px solid #DC2626;border-radius:6px;color:#0B192C;"><strong>Taux de conversion — {{region}} : 68 %</strong><br>Seuil d'alerte : 80 % · Écart : -12 pts</div><h2>Actions recommandées</h2><ol><li>Analyser les causes avec les superviseurs terrain</li><li>Renforcer l'animation en point de vente</li><li>Point de suivi sous 48 h</li></ol>${btn("Analyser l'indicateur", "#", "#DC2626")}`,
   },
   {
-    id: "announcement",
-    name: "Executive Summary",
-    desc: "Professional announcement",
-    subject: "Executive summary: Q4 priorities at {{company}}",
-    body: `<h1>Executive summary</h1><p>Hello {{name}},</p><p>Here are the key highlights for this quarter at {{company}}.</p><h2>Highlights</h2><ul><li>Revenue up 18% year over year</li><li>Three new regional partnerships</li><li>Launch of the Sinova Cloud platform</li></ul>${btn("Read full report")}`,
+    id: "exec",
+    name: "Executive Performance Summary",
+    desc: "Synthèse pour la direction",
+    subject: "Synthèse de performance — {{company}} — {{date}}",
+    body: `<h1>Synthèse de performance</h1><p>Madame, Monsieur,</p><p>Voici la synthèse exécutive des performances commerciales de {{company}} à date du {{date}}.</p>${kpiTable([
+      ["CA cumulé", "520 M DA", "541 M DA", "104%"],
+      ["Part de marché", "32%", "33,5%", "+1,5 pt"],
+      ["Marge brute", "18%", "17,4%", "97%"],
+    ])}<h2>Faits marquants</h2><ul><li>Dépassement de l'objectif de chiffre d'affaires</li><li>Gain de part de marché sur le segment premium</li><li>Pression sur la marge à surveiller</li></ul><p>Je reste à votre disposition pour toute précision.</p>${btn("Télécharger le rapport complet")}`,
   },
   {
-    id: "welcome",
-    name: "Client Onboarding",
-    desc: "Welcome a new client",
-    subject: "Welcome to Sinova, {{name}}",
-    body: `<h1>Welcome aboard, {{name}}!</h1><p>We're delighted to partner with {{company}}. Your dedicated account team is ready to help you get started.</p><h2>Next steps</h2><ol><li>Activate your client portal</li><li>Schedule your kickoff call</li><li>Meet your success manager</li></ol>${btn("Activate portal")}`,
+    id: "blank",
+    name: "Email vierge",
+    desc: "Partir de zéro",
+    subject: "",
+    body: `<p>Bonjour {{name}},</p><p></p>`,
   },
 ];
 
@@ -56,53 +110,51 @@ export function hydrate(text: string, data: Record<string, string>) {
   return text.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => data[k] ?? m);
 }
 
-const INLINE: Record<string, string> = {
-  h1: "margin:0 0 16px;font-size:26px;line-height:1.3;font-weight:800;color:#0B192C;",
-  h2: "margin:24px 0 12px;font-size:19px;line-height:1.4;font-weight:700;color:#0B192C;",
-  p: "margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;",
-  ul: "margin:0 0 16px;padding-left:22px;color:#334155;font-size:15px;line-height:1.7;",
-  ol: "margin:0 0 16px;padding-left:22px;color:#334155;font-size:15px;line-height:1.7;",
-  li: "margin:0 0 6px;",
-  a: "color:#0057D9;text-decoration:underline;",
-  blockquote: "margin:16px 0;padding:12px 16px;border-left:4px solid #00C2FF;color:#475569;",
-};
+function inline(b: Brand): Record<string, string> {
+  return {
+    h1: `margin:0 0 16px;font-size:26px;line-height:1.3;font-weight:800;color:${b.headingColor};`,
+    h2: `margin:24px 0 12px;font-size:19px;line-height:1.4;font-weight:700;color:${b.headingColor};`,
+    h3: `margin:20px 0 10px;font-size:16px;font-weight:700;color:${b.headingColor};`,
+    p: `margin:0 0 16px;font-size:15px;line-height:1.7;color:${b.textColor};`,
+    ul: `margin:0 0 16px;padding-left:22px;color:${b.textColor};font-size:15px;line-height:1.7;`,
+    ol: `margin:0 0 16px;padding-left:22px;color:${b.textColor};font-size:15px;line-height:1.7;`,
+    li: "margin:0 0 6px;",
+    a: `color:${b.primary};text-decoration:underline;`,
+    blockquote: `margin:16px 0;padding:12px 16px;border-left:4px solid ${b.accent};color:#475569;`,
+  };
+}
 
-/** Inline CSS for elements without an explicit style attribute. */
-export function inlineStyles(html: string) {
-  return html.replace(/<(h1|h2|p|ul|ol|li|a|blockquote)(\s[^>]*)?>/gi, (m, tag: string, attrs = "") => {
+export function inlineStyles(html: string, b: Brand = DEFAULT_BRAND) {
+  const map = inline(b);
+  return html.replace(/<(h1|h2|h3|p|ul|ol|li|a|blockquote)(\s[^>]*)?>/gi, (m, tag: string, attrs = "") => {
     if (/style\s*=/.test(attrs)) return m;
-    return `<${tag}${attrs} style="${INLINE[tag.toLowerCase()]}">`;
+    return `<${tag}${attrs} style="${map[tag.toLowerCase()]}">`;
   });
 }
 
-export function buildEmail(opts: {
-  body: string;
-  subject: string;
-  sender: (typeof SENDERS)[number];
-  dark?: boolean;
-}) {
-  const { sender, dark } = opts;
-  let body = inlineStyles(opts.body);
-  const bg = dark ? "#03071E" : "#F8FAFC";
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+export function buildEmail(opts: { body: string; subject: string; signature: string; brand: Brand; dark?: boolean }) {
+  const { brand: b, dark } = opts;
+  let body = inlineStyles(opts.body, b).replace(/bgcolor="#1428A0"/g, `bgcolor="${b.primary}"`);
+  const sig = inlineStyles(opts.signature, b);
+  const bg = dark ? "#03071E" : "#F1F5F9";
   const card = dark ? "#0B192C" : "#FFFFFF";
-  if (dark) {
-    body = body
-      .replace(/color:#0B192C/g, "color:#F8FAFC")
-      .replace(/color:#334155/g, "color:#CBD5E1")
-      .replace(/background:#EFF6FF/g, "background:#10264A");
-  }
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${opts.subject}</title></head>
+  if (dark) body = body.replaceAll(`color:${b.headingColor}`, "color:#F8FAFC").replaceAll(`color:${b.textColor}`, "color:#CBD5E1");
+  const logo = b.logoUrl
+    ? `<img src="${esc(b.logoUrl)}" alt="${esc(b.logoText)}" height="36" style="display:inline-block;height:36px;border:0;vertical-align:middle;">`
+    : `<span style="font-size:20px;font-weight:800;letter-spacing:3px;color:#FFFFFF;">${esc(b.logoText)}</span>`;
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(opts.subject)}</title></head>
 <body style="margin:0;padding:0;background:${bg};-webkit-text-size-adjust:100%;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${bg};"><tr><td align="center" style="padding:32px 12px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:${card};border-radius:14px;overflow:hidden;font-family:Inter,Segoe UI,Arial,sans-serif;">
-<tr><td style="background:#03071E;padding:22px 32px;"><span style="font-size:20px;font-weight:800;letter-spacing:3px;color:#FFFFFF;">SINOVA</span><span style="font-size:12px;color:#00C2FF;margin-left:10px;">a Samsung partner</span></td></tr>
-<tr><td style="height:4px;background:#0057D9;background-image:linear-gradient(90deg,#0057D9,#00C2FF);font-size:0;line-height:0;">&nbsp;</td></tr>
-<tr><td style="padding:36px 32px 12px;">${body}</td></tr>
-<tr><td style="padding:8px 32px 28px;"><p style="margin:0;font-size:14px;line-height:1.6;color:${dark ? "#CBD5E1" : "#334155"};">Best regards,<br><strong style="color:${dark ? "#F8FAFC" : "#0B192C"};">${sender.name}</strong><br><span style="color:#64748B;">${sender.title} · ${sender.email}</span></p></td></tr>
-<tr><td style="background:#0B192C;padding:24px 32px;font-size:12px;line-height:1.6;color:#94A3B8;">
-<p style="margin:0 0 10px;"><a href="#" style="color:#00C2FF;text-decoration:none;margin-right:14px;">LinkedIn</a><a href="#" style="color:#00C2FF;text-decoration:none;margin-right:14px;">X</a><a href="#" style="color:#00C2FF;text-decoration:none;">YouTube</a></p>
-<p style="margin:0 0 8px;">Sinova Technologies · 12 Rue Didouche Mourad, Algiers, Algeria</p>
-<p style="margin:0;color:#64748B;">CONFIDENTIALITY NOTICE: This email and any attachments are confidential and intended solely for the named recipient. If you received it in error, please notify the sender and delete it.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:${card};border-radius:14px;overflow:hidden;font-family:${b.font};">
+<tr><td style="background:${b.headerBg};padding:22px 32px;">${logo}<span style="font-size:12px;color:${b.accent};margin-left:12px;vertical-align:middle;">${esc(b.tagline)}</span></td></tr>
+<tr><td style="height:4px;background:${b.primary};background-image:linear-gradient(90deg,${b.primary},${b.accent});font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr><td style="padding:36px 32px 12px;color:${b.textColor};">${body}</td></tr>
+<tr><td style="padding:8px 32px 28px;color:${dark ? "#CBD5E1" : b.textColor};border-top:1px solid ${dark ? "#1E293B" : "#E2E8F0"};">${sig}</td></tr>
+<tr><td style="background:${b.footerBg};padding:24px 32px;font-size:12px;line-height:1.6;color:${b.footerText};">
+<p style="margin:0 0 8px;">${esc(b.footerAddress)}</p>
+<p style="margin:0;opacity:.8;">${esc(b.footerNotice)}</p>
 </td></tr></table></td></tr></table></body></html>`;
 }
 
