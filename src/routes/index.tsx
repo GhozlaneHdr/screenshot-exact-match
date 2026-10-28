@@ -78,7 +78,7 @@ function Studio() {
   const [templateId, setTemplateId] = useState(TEMPLATES[0]!.id);
   const [subject, setSubject] = useState(TEMPLATES[0]!.subject);
   const [body, setBody] = useState(TEMPLATES[0]!.body);
-  const [senderId, setSenderId] = useState(SENDERS[0].id);
+  const [senderId, setSenderId] = useState(SENDERS[0]!.id);
   const [mode, setMode] = useState<"visual" | "html">("visual");
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [hydrated, setHydrated] = useState(true);
