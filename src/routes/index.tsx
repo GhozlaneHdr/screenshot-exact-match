@@ -75,9 +75,9 @@ function Studio() {
   const [cc, setCc] = useState<string[]>([]);
   const [bcc, setBcc] = useState<string[]>([]);
   const [showCc, setShowCc] = useState(false);
-  const [templateId, setTemplateId] = useState(TEMPLATES[0].id);
-  const [subject, setSubject] = useState(TEMPLATES[0].subject);
-  const [body, setBody] = useState(TEMPLATES[0].body);
+  const [templateId, setTemplateId] = useState(TEMPLATES[0]!.id);
+  const [subject, setSubject] = useState(TEMPLATES[0]!.subject);
+  const [body, setBody] = useState(TEMPLATES[0]!.body);
   const [senderId, setSenderId] = useState(SENDERS[0].id);
   const [mode, setMode] = useState<"visual" | "html">("visual");
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
@@ -286,7 +286,7 @@ function Studio() {
             <Input placeholder="you@sinova.com" value={testAddr} onChange={(e) => setTestAddr(e.target.value)} />
             <DialogFooter>
               <Button disabled={sending} onClick={async () => {
-                if (!EMAIL_RE.test(testAddr)) return toast.error("Enter a valid test address");
+                if (!EMAIL_RE.test(testAddr)) { toast.error("Enter a valid test address"); return; }
                 await simulateSend(`Test sent to ${testAddr}`); setTestOpen(false);
               }}>{sending && <Loader2 className="h-4 w-4 animate-spin" />} Send test</Button>
             </DialogFooter>
