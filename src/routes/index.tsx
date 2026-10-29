@@ -326,7 +326,7 @@ function Studio() {
             <DialogFooter>
               <Button disabled={sending} onClick={async () => {
                 if (!EMAIL_RE.test(testAddr)) { toast.error("Enter a valid test address"); return; }
-                await simulateSend(`Test sent to ${testAddr}`); setTestOpen(false);
+                if (await simulateSend(`Test sent to ${testAddr}`, [testAddr], false)) setTestOpen(false);
               }}>{sending && <Loader2 className="h-4 w-4 animate-spin" />} Send test</Button>
             </DialogFooter>
           </DialogContent>
@@ -343,7 +343,7 @@ function Studio() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-              <Button className="bg-gradient-brand" disabled={sending} onClick={async () => { await simulateSend(`Email sent to ${to.length} recipient(s)`); setConfirmOpen(false); }}>
+              <Button className="bg-gradient-brand" disabled={sending} onClick={async () => { if (await simulateSend(`Email sent to ${to.length} recipient(s)`)) setConfirmOpen(false); }}>
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {sending ? "Sending…" : "Send now"}
               </Button>
             </DialogFooter>
@@ -352,22 +352,31 @@ function Studio() {
 
         <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Delivery settings</DialogTitle><DialogDescription>Choose how emails are dispatched.</DialogDescription></DialogHeader>
-            <Tabs defaultValue="smtp">
-              <TabsList className="grid w-full grid-cols-5">
-                {["smtp", "resend", "sendgrid", "gmail", "webhook"].map((p) => <TabsTrigger key={p} value={p} className="text-xs capitalize">{p}</TabsTrigger>)}
-              </TabsList>
-              <TabsContent value="smtp" className="space-y-3 pt-3">
-                <div className="grid grid-cols-3 gap-2"><Input className="col-span-2" placeholder="smtp.sinova.com" /><Input placeholder="587" /></div>
-                <Input placeholder="Username" /><Input type="password" placeholder="Password" />
-              </TabsContent>
-              {["resend", "sendgrid"].map((p) => (
-                <TabsContent key={p} value={p} className="space-y-3 pt-3"><Input type="password" placeholder={`${p} API key`} /><Input placeholder="Verified sender domain" /></TabsContent>
-              ))}
-              <TabsContent value="gmail" className="pt-3"><Button variant="outline" className="w-full"><Mail className="h-4 w-4" /> Connect Google account</Button></TabsContent>
-              <TabsContent value="webhook" className="space-y-3 pt-3"><Input placeholder="https://api.sinova.com/email/drafts" /><p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Webhook className="h-3.5 w-3.5" /> We'll POST subject, recipients and inlined HTML as JSON.</p></TabsContent>
-            </Tabs>
-            <DialogFooter><Button onClick={() => { setSettingsOpen(false); toast.success("Settings saved"); }}>Save</Button></DialogFooter>
+            <DialogHeader><DialogTitle>SMTP settings</DialogTitle><DialogDescription>Saved on this device and used for every send.</DialogDescription></DialogHeader>
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <Input className="col-span-2" placeholder="smtp.gmail.com" value={smtp.host} onChange={upd("host")} />
+                <Input placeholder="587" value={smtp.port || ""} onChange={upd("port")} />
+              </div>
+              <Select value={smtp.encryption} onValueChange={(v) => setSmtp((s) => ({ ...s, encryption: v as SmtpConfig["encryption"] }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="starttls">STARTTLS (port 587)</SelectItem>
+                  <SelectItem value="ssl">SSL/TLS (port 465)</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input placeholder="Username" value={smtp.username} onChange={upd("username")} />
+              <Input type="password" placeholder="Password / app password" value={smtp.password} onChange={upd("password")} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder="Sender email" value={smtp.fromEmail} onChange={upd("fromEmail")} />
+                <Input placeholder="Sender name" value={smtp.fromName} onChange={upd("fromName")} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" disabled={sending} onClick={testConn}>{sending && <Loader2 className="h-4 w-4 animate-spin" />} Test connection</Button>
+              <Button onClick={saveSmtp}>Save</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
