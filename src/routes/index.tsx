@@ -24,6 +24,11 @@ import {
   TEMPLATES, SENDERS, VARIABLES, SAMPLE_DATA, BUTTON_SNIPPET, CALLOUT_SNIPPET, TABLE_SNIPPET,
   buildEmail, hydrate, EMAIL_RE,
 } from "@/lib/email-engine";
+import { useServerFn } from "@tanstack/react-start";
+import { sendSmtpEmail, testSmtpConnection, type SmtpConfig } from "@/lib/smtp.functions";
+
+const SMTP_KEY = "sinova-smtp-settings";
+const DEFAULT_SMTP: SmtpConfig = { host: "", port: 587, encryption: "starttls", username: "", password: "", fromEmail: "", fromName: "Ghozlane Hadri" };
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -91,6 +96,12 @@ function Studio() {
   const [sending, setSending] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const subjectRef = useRef<HTMLInputElement>(null);
+  const [smtp, setSmtp] = useState<SmtpConfig>(DEFAULT_SMTP);
+  useEffect(() => {
+    try { const s = localStorage.getItem(SMTP_KEY); if (s) setSmtp({ ...DEFAULT_SMTP, ...JSON.parse(s) }); } catch { /* ignore */ }
+  }, []);
+  const upd = (k: keyof SmtpConfig) => (e: { target: { value: string } }) =>
+    setSmtp((s) => ({ ...s, [k]: k === "port" ? Number(e.target.value) || 0 : e.target.value }));
 
   const sender = SENDERS.find((s) => s.id === senderId)!;
   const data = useMemo(() => ({ ...SAMPLE_DATA, sender_name: sender.name }), [sender]);
@@ -134,11 +145,39 @@ function Studio() {
     if (!subject.trim()) { toast.error("Subject line is required"); return false; }
     return true;
   };
-  const simulateSend = async (label: string) => {
+  const sendFn = useServerFn(sendSmtpEmail);
+  const testFn = useServerFn(testSmtpConnection);
+  const simulateSend = async (label: string, recipients: string[] = to, withCopies = true) => {
+    if (!smtp.host || !EMAIL_RE.test(smtp.fromEmail)) {
+      toast.error("Set up SMTP first", { description: "Open Settings and fill in server, port and sender email." });
+      setSettingsOpen(true);
+      return false;
+    }
     setSending(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setSending(false);
-    toast.success(label, { description: "Demo mode — connect a provider in Settings to deliver for real." });
+    try {
+      const res = await sendFn({ data: {
+        smtp, to: recipients, subject: hydrate(subject, data), html: finalHtml,
+        ...(withCopies ? { cc, bcc } : {}),
+      } });
+      if (res.ok) { toast.success(label); return true; }
+      toast.error("Sending failed", { description: res.error });
+      return false;
+    } catch (e) {
+      toast.error("Sending failed", { description: e instanceof Error ? e.message : String(e) });
+      return false;
+    } finally { setSending(false); }
+  };
+  const saveSmtp = () => {
+    localStorage.setItem(SMTP_KEY, JSON.stringify(smtp));
+    setSettingsOpen(false);
+    toast.success("SMTP settings saved");
+  };
+  const testConn = async () => {
+    setSending(true);
+    try {
+      const r = await testFn({ data: { smtp } });
+      r.ok ? toast.success("Connection OK") : toast.error("Connection failed", { description: r.error });
+    } finally { setSending(false); }
   };
 
   const tools = [
