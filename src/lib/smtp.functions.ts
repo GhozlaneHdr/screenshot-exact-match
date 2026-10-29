@@ -38,7 +38,7 @@ async function connect(smtp: SmtpConfig) {
     port: Number(smtp.port),
     secure: smtp.encryption === "ssl",
     startTls: smtp.encryption === "starttls",
-    credentials: smtp.username ? { username: smtp.username, password: smtp.password } : undefined,
+    ...(smtp.username ? { credentials: { username: smtp.username, password: smtp.password } } : {}),
     authType: ["plain", "login"],
   });
 }
@@ -58,8 +58,8 @@ export const sendSmtpEmail = createServerFn({ method: "POST" })
       await mailer.send({
         from: { name: data.smtp.fromName, email: data.smtp.fromEmail },
         to: data.to,
-        cc: data.cc?.length ? data.cc : undefined,
-        bcc: data.bcc?.length ? data.bcc : undefined,
+        ...(data.cc?.length ? { cc: data.cc } : {}),
+        ...(data.bcc?.length ? { bcc: data.bcc } : {}),
         subject: data.subject,
         html: data.html,
       });
