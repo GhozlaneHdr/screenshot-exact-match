@@ -24,6 +24,11 @@ import {
   TEMPLATES, SENDERS, VARIABLES, SAMPLE_DATA, BUTTON_SNIPPET, CALLOUT_SNIPPET, TABLE_SNIPPET,
   buildEmail, hydrate, EMAIL_RE,
 } from "@/lib/email-engine";
+import { useServerFn } from "@tanstack/react-start";
+import { sendSmtpEmail, testSmtpConnection, type SmtpConfig } from "@/lib/smtp.functions";
+
+const SMTP_KEY = "sinova-smtp-settings";
+const DEFAULT_SMTP: SmtpConfig = { host: "", port: 587, encryption: "starttls", username: "", password: "", fromEmail: "", fromName: "Ghozlane Hadri" };
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -91,6 +96,12 @@ function Studio() {
   const [sending, setSending] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const subjectRef = useRef<HTMLInputElement>(null);
+  const [smtp, setSmtp] = useState<SmtpConfig>(DEFAULT_SMTP);
+  useEffect(() => {
+    try { const s = localStorage.getItem(SMTP_KEY); if (s) setSmtp({ ...DEFAULT_SMTP, ...JSON.parse(s) }); } catch { /* ignore */ }
+  }, []);
+  const upd = (k: keyof SmtpConfig) => (e: { target: { value: string } }) =>
+    setSmtp((s) => ({ ...s, [k]: k === "port" ? Number(e.target.value) || 0 : e.target.value }));
 
   const sender = SENDERS.find((s) => s.id === senderId)!;
   const data = useMemo(() => ({ ...SAMPLE_DATA, sender_name: sender.name }), [sender]);
@@ -134,11 +145,39 @@ function Studio() {
     if (!subject.trim()) { toast.error("Subject line is required"); return false; }
     return true;
   };
-  const simulateSend = async (label: string) => {
+  const sendFn = useServerFn(sendSmtpEmail);
+  const testFn = useServerFn(testSmtpConnection);
+  const simulateSend = async (label: string, recipients: string[] = to, withCopies = true) => {
+    if (!smtp.host || !EMAIL_RE.test(smtp.fromEmail)) {
+      toast.error("Set up SMTP first", { description: "Open Settings and fill in server, port and sender email." });
+      setSettingsOpen(true);
+      return false;
+    }
     setSending(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setSending(false);
-    toast.success(label, { description: "Demo mode — connect a provider in Settings to deliver for real." });
+    try {
+      const res = await sendFn({ data: {
+        smtp, to: recipients, subject: hydrate(subject, data), html: finalHtml,
+        ...(withCopies ? { cc, bcc } : {}),
+      } });
+      if (res.ok) { toast.success(label); return true; }
+      toast.error("Sending failed", { description: res.error });
+      return false;
+    } catch (e) {
+      toast.error("Sending failed", { description: e instanceof Error ? e.message : String(e) });
+      return false;
+    } finally { setSending(false); }
+  };
+  const saveSmtp = () => {
+    localStorage.setItem(SMTP_KEY, JSON.stringify(smtp));
+    setSettingsOpen(false);
+    toast.success("SMTP settings saved");
+  };
+  const testConn = async () => {
+    setSending(true);
+    try {
+      const r = await testFn({ data: { smtp } });
+      r.ok ? toast.success("Connection OK") : toast.error("Connection failed", { description: r.error });
+    } finally { setSending(false); }
   };
 
   const tools = [
@@ -287,7 +326,7 @@ function Studio() {
             <DialogFooter>
               <Button disabled={sending} onClick={async () => {
                 if (!EMAIL_RE.test(testAddr)) { toast.error("Enter a valid test address"); return; }
-                await simulateSend(`Test sent to ${testAddr}`); setTestOpen(false);
+                if (await simulateSend(`Test sent to ${testAddr}`, [testAddr], false)) setTestOpen(false);
               }}>{sending && <Loader2 className="h-4 w-4 animate-spin" />} Send test</Button>
             </DialogFooter>
           </DialogContent>
@@ -304,7 +343,7 @@ function Studio() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-              <Button className="bg-gradient-brand" disabled={sending} onClick={async () => { await simulateSend(`Email sent to ${to.length} recipient(s)`); setConfirmOpen(false); }}>
+              <Button className="bg-gradient-brand" disabled={sending} onClick={async () => { if (await simulateSend(`Email sent to ${to.length} recipient(s)`)) setConfirmOpen(false); }}>
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {sending ? "Sending…" : "Send now"}
               </Button>
             </DialogFooter>
@@ -313,22 +352,31 @@ function Studio() {
 
         <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Delivery settings</DialogTitle><DialogDescription>Choose how emails are dispatched.</DialogDescription></DialogHeader>
-            <Tabs defaultValue="smtp">
-              <TabsList className="grid w-full grid-cols-5">
-                {["smtp", "resend", "sendgrid", "gmail", "webhook"].map((p) => <TabsTrigger key={p} value={p} className="text-xs capitalize">{p}</TabsTrigger>)}
-              </TabsList>
-              <TabsContent value="smtp" className="space-y-3 pt-3">
-                <div className="grid grid-cols-3 gap-2"><Input className="col-span-2" placeholder="smtp.sinova.com" /><Input placeholder="587" /></div>
-                <Input placeholder="Username" /><Input type="password" placeholder="Password" />
-              </TabsContent>
-              {["resend", "sendgrid"].map((p) => (
-                <TabsContent key={p} value={p} className="space-y-3 pt-3"><Input type="password" placeholder={`${p} API key`} /><Input placeholder="Verified sender domain" /></TabsContent>
-              ))}
-              <TabsContent value="gmail" className="pt-3"><Button variant="outline" className="w-full"><Mail className="h-4 w-4" /> Connect Google account</Button></TabsContent>
-              <TabsContent value="webhook" className="space-y-3 pt-3"><Input placeholder="https://api.sinova.com/email/drafts" /><p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Webhook className="h-3.5 w-3.5" /> We'll POST subject, recipients and inlined HTML as JSON.</p></TabsContent>
-            </Tabs>
-            <DialogFooter><Button onClick={() => { setSettingsOpen(false); toast.success("Settings saved"); }}>Save</Button></DialogFooter>
+            <DialogHeader><DialogTitle>SMTP settings</DialogTitle><DialogDescription>Saved on this device and used for every send.</DialogDescription></DialogHeader>
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <Input className="col-span-2" placeholder="smtp.gmail.com" value={smtp.host} onChange={upd("host")} />
+                <Input placeholder="587" value={smtp.port || ""} onChange={upd("port")} />
+              </div>
+              <Select value={smtp.encryption} onValueChange={(v) => setSmtp((s) => ({ ...s, encryption: v as SmtpConfig["encryption"] }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="starttls">STARTTLS (port 587)</SelectItem>
+                  <SelectItem value="ssl">SSL/TLS (port 465)</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input placeholder="Username" value={smtp.username} onChange={upd("username")} />
+              <Input type="password" placeholder="Password / app password" value={smtp.password} onChange={upd("password")} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder="Sender email" value={smtp.fromEmail} onChange={upd("fromEmail")} />
+                <Input placeholder="Sender name" value={smtp.fromName} onChange={upd("fromName")} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" disabled={sending} onClick={testConn}>{sending && <Loader2 className="h-4 w-4 animate-spin" />} Test connection</Button>
+              <Button onClick={saveSmtp}>Save</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
