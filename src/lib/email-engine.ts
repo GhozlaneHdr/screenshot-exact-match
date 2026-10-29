@@ -57,6 +57,13 @@ export const DEFAULT_SIGNATURE = `<p style="margin:0;font-size:14px;line-height:
 export const btn = (label: string, href = "#", color = "#1428A0", radius = 8) =>
   `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td align="center" bgcolor="${color}" style="border-radius:${radius}px;"><a href="${href}" target="_blank" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:${radius}px;">${label}</a></td></tr></table>`;
 
+export const SENDERS = [
+  { id: "ghozlane", name: "Ghozlane Hadri", email: "ghozlane.hadri@sinova.com" },
+  { id: "perf", name: "Performance Commerciale", email: "performance@sinova.com" },
+];
+
+export const BUTTON_SNIPPET = btn("Voir le détail");
+
 export const CALLOUT_SNIPPET = `<div style="margin:20px 0;padding:16px 20px;background:#EFF6FF;border-left:4px solid #1428A0;border-radius:6px;color:#0B192C;">Important : ajoutez votre note ici.</div>`;
 
 const kpiTable = (rows: [string, string, string, string][]) =>
@@ -134,7 +141,8 @@ export function inlineStyles(html: string, b: Brand = DEFAULT_BRAND) {
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export function buildEmail(opts: { body: string; subject: string; signature: string; brand: Brand; dark?: boolean }) {
+export function buildEmail(input: { body: string; subject: string; signature?: string; brand?: Brand; dark?: boolean; sender?: { name: string; email: string } }) {
+  const opts = { ...input, signature: input.signature ?? DEFAULT_SIGNATURE, brand: input.brand ?? DEFAULT_BRAND };
   const { brand: b, dark } = opts;
   let body = inlineStyles(opts.body, b).replace(/bgcolor="#1428A0"/g, `bgcolor="${b.primary}"`);
   const sig = inlineStyles(opts.signature, b);
